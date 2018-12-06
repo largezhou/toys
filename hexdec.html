@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale='1',maximum-scale='1',minimum-scale=1">
+    <title>16进制和10进制互转练习</title>
+
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div style="text-align: center;">
+            <p
+                style="font-size: 30px;"
+                :style="{ visibility: right === null ? 'hidden' : 'visible' }"
+            >十进制：{{ curIndex + 1 }}</p>
+            <div style="font-size: 30px;margin-bottom: 20px;">{{ curNum }}</div>
+            <input
+                style="font-size: 30px;width: 150px;text-align: center;" type="text" autofocus
+                v-model="answer" :maxlength="maxLen" @keydown.enter="onNext"
+                ref="input"
+            >
+            <div style="margin-top: 20px;">
+                <button style="width: 100px; height: 30px;" @click="onNext">继续</button>
+            </div>
+            <div style="margin-top: 20px;font-size: 30px;">
+                <span v-if="right === true" style="color: green">√</span>
+                <span v-else-if="right === false" style="color: red">{{ curAns }}</span>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+    <script>
+    const HEX = [
+        '1', '2', '3', '4',
+        '5', '6', '7', '8',
+        '9', 'A', 'B', 'C',
+        'D', 'E', 'F',
+    ]
+    const BIN = [
+        '0001', '0010', '0011', '0100',
+        '0101', '0110', '0111', '1000',
+        '1001', '1010', '1011', '1100',
+        '1101', '1110', '1111',
+    ]
+    const randomEl = items => {
+        return items[Math.floor(Math.random() * items.length)]
+    }
+
+    window.vm = new Vue({
+        el: '#app',
+        data: () => ({
+            lastIndex: '',
+            curIndex: '',
+            curType: '',
+            curAnsTeyp: '',
+
+            answer: '',
+            right: null,
+            maxLen: 0,
+        }),
+        computed: {
+            curNum() {
+                return this[this.curType][this.curIndex]
+            },
+            curAns() {
+                return this[this.curAnsType][this.curIndex]
+            },
+        },
+        created() {
+            this.hex = HEX
+            this.bin = BIN
+
+            this.randomQues()
+        },
+        methods: {
+            randomQues() {
+                this.right = null
+                this.answer = ''
+
+                do {
+                    this.curIndex = Math.floor(Math.random() * 15)
+                } while (this.curIndex == this.lastIndex)
+
+                this.curType = Math.random() > 0.5 ? 'hex' : 'bin'
+                this.curAnsType = this.curType == 'hex' ? 'bin' : 'hex'
+                this.maxLen = this.curAnsType == 'hex' ? 1 : 4
+            },
+            onNext() {
+                this.randomQues()
+                this.$refs.input.focus()
+            }
+        },
+        watch: {
+            answer(newValue) {
+                if (newValue.length < this.maxLen) {
+                    return
+                }
+
+                this.right = this.curAns == newValue
+            },
+            curIndex(newValue) {
+                this.lastIndex = newValue
+            },
+        },
+    })
+    </script>
+</body>
+
+</html>
