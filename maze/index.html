@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <title>迷宫</title>
+</head>
+
+<body>
+<div id="app">
+  <div class="map-wrap" ref="maze">
+    <div
+      class="map-zone"
+      @click="onSetPass"
+      @mousedown="onStartDrag"
+      @mouseup="onStopDrag"
+      @mousemove="onDragging"
+      @mouseleave="onStopDrag"
+    >
+      <template v-for="(row, x) of maze">
+        <template v-for="(col, y) of row">
+          <div v-if="col" class="pass" :style="passPosStyle(x, y)"></div>
+        </template>
+      </template>
+
+      <div class="start" v-if="start" :style="passPosStyle(start.row, start.col)">IN</div>
+      <div class="end" v-if="end" :style="passPosStyle(end.row, end.col)">OUT</div>
+
+      <div class="current" v-show="(current.row !== undefined) && (current.col !== undefined)" :style="passPosStyle(current.row, current.col)">🚩</div>
+    </div>
+  </div>
+  <div class="right-area">
+    <div class="controls">
+      <button type="button" @click="draw = !draw">{{ draw ? '绘制中...' : '擦除中...' }}</button>
+      <button type="button" @click="onReset">重置</button>
+      <button type="button" @click="onSetStartEnd('start')">设置起点{{ start ? `[${start.row}, ${start.col}]` : '' }}</button>
+      <button type="button" @click="onSetStartEnd('end')">设置终点{{ end ? `[${end.row}, ${end.col}]` : '' }}</button>
+      <button type="button" @click="onUndo">撤销 {{ histories.length }} / {{ this.maxHistory }}</button>
+      <button type="button" @click="onGo">走起</button>
+
+      <input v-model="sleep">
+    </div>
+  </div>
+</div>
+<script>
+window.log = console.log.bind(console)
+window.sleep = time => {
+  const end = Date.now() + time
+  while (Date.now() < end) {
+
+  }
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
+<script src="draw.js"></script>
+<script src="go.js"></script>
+</body>
+
+</html>
