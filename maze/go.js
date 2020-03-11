@@ -1,4 +1,4 @@
-const go = async(maze, start, end, path, current, wait) => {
+const go = async (maze, start, end, path, current, wait) => {
   for (let t of [start, end]) {
     if (!t) {
       alert('起止点都必须设置')
