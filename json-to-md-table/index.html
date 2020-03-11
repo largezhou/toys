@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>JSON 转 markdown 表格</title>
 
   <style>
   table {
@@ -56,6 +56,8 @@
 <script src="https://unpkg.com/marked@0.3.6"></script>
 <script>
 const sepChar = '.'
+const log = console.log
+const INDENT_TYPE_KEY = 'indent'
 
 const vm = new Vue({
   el: '#app',
@@ -63,14 +65,9 @@ const vm = new Vue({
     obj: {
       bool: true,
       int: 1,
-      float: 0.1,
+      decimal: 0.1,
       string: 'hehe',
-      array_empty: [],
-      array_string: ['string'],
-      array_int: [1, 2],
-      array_bool: [true, false],
-      array_float: [1.2, 3.4],
-      array_null: [null, null],
+      array: [1, 2],
       null: null,
       code: '0',
       msg: '获取成功',
@@ -84,6 +81,26 @@ const vm = new Vue({
               images: [
                 'https://testimg.iweilingdi.com/upload/Other/d8131413fb5544b6a907ffa370d283c2.png',
               ],
+              videos: [],
+              test: {
+                a: [
+                  {
+                    b: 3,
+                    c: 1,
+                    d: null,
+                  },
+                ],
+                b: 1,
+              },
+            },
+          },
+          null,
+          {
+            c_type: 2,
+            c_name: '测试活动xxx',
+            parsed_media: {
+              audio: null,
+              images: [],
               videos: [
                 {
                   cover: 'https://testimg.iweilingdi.com/upload/Other/d8131413fb5544b6a907ffa370d283c2.png',
@@ -98,9 +115,16 @@ const vm = new Vue({
                 a: [
                   {
                     b: 3,
-                    c: 1,
+                    c: null,
+                    d: 1,
+                  },
+                  {
+                    b: null,
+                    c: 2,
+                    d: 2,
                   },
                 ],
+                b: null,
               },
             },
           },
@@ -108,18 +132,10 @@ const vm = new Vue({
             c_type: 2,
             c_name: '测试活动xxx',
             parsed_media: null,
-            test: {
-              a: [
-                {
-                  b: 3,
-                  d: 1,
-                },
-                {
-                  c: 2,
-                  e: 2,
-                },
-              ],
-            },
+            another: [
+              null,
+              'hehe',
+            ],
           },
         ],
         totalCount: {
@@ -132,7 +148,7 @@ const vm = new Vue({
     },
     json: '',
     tableMD: '',
-    indentType: 'space',
+    indentType: localStorage.getItem(INDENT_TYPE_KEY) || 'space',
   }),
   computed: {
     compiledMarkdown() {
@@ -156,6 +172,7 @@ const vm = new Vue({
       }
 
       const flatten = this.flatten(data)
+      log(window.t = flatten)
 
       this.tableMD = '|参数|类型|描述|\n|:-|:-|:-|\n' + this.makeTableBody(flatten)
     },
@@ -166,6 +183,7 @@ const vm = new Vue({
         case 'dash':
           return '—'.repeat(level) + ' '
         case 'space':
+        default:
           return level ? '　'.repeat(level - 1) + '└' : ''
       }
     },
@@ -186,12 +204,8 @@ const vm = new Vue({
           continue
         }
 
-        const val = data[key]
-        const valType = this.getType(val)
-
-        const currentKey = key.slice(prefix.length)
-
-        const keyPieces = currentKey.split(sepChar)
+        const valType = this.getType(data[key])
+        const keyPieces = key.slice(prefix.length).split(sepChar)
 
         if (keyPieces.length > 1) {
           prefix += keyPieces[0] + sepChar
@@ -210,7 +224,7 @@ const vm = new Vue({
 
       const p = Object.prototype.toString.call(data).slice(8, -1)
       if (p === 'Number') {
-        return 'float'
+        return 'decimal'
       } else {
         return p.toLowerCase()
       }
@@ -230,7 +244,9 @@ const vm = new Vue({
           const valType = this.getType(i)
           if (valType === 'object' || valType === 'array') {
             this.assign(f, this.flatten(i, keyChain))
-          } else { // 如果是简单类型，则直接中断，不需要再遍历后面的了
+          }
+          // 如果是简单类型，则直接中断，不需要再遍历后面的了。数组中有为 null 的元素，则跳过，去看看其他元素的情况
+          else if (valType !== 'null') {
             f = { [keyChain]: [] }
             break
           }
@@ -252,6 +268,11 @@ const vm = new Vue({
           tar[key] = source[key]
         }
       })
+    },
+  },
+  watch: {
+    indentType(newVal) {
+      localStorage.setItem(INDENT_TYPE_KEY, newVal)
     },
   },
 })
