@@ -30,30 +30,43 @@
 <body>
 <div id="app">
   <div style="display: flex; justify-items: center;">
-    <textarea ref="input" style="display: inline-block;" cols="50" rows="30" v-model="json"></textarea>
-    <textarea ref="output" style="display: inline-block;" cols="50" rows="30" v-model="tableMD"></textarea>
-    <div
-      v-html="compiledMarkdown"
-      style="
-      display: inline-block;
-      height: 471px;
-      box-sizing: border-box;
-      padding: 5px;
-"
-    ></div>
-  </div>
-  <div>
-    <button @click="onConvert">转换</button>
     <div>
-      缩进类型：
-      <input name="indent_type" value="space" type="radio" v-model="indentType"> 全角空格
-      <input name="indent_type" value="table" type="radio" v-model="indentType"> 制表符
-      <input name="indent_type" value="dash" type="radio" v-model="indentType"> 短横线
+      <div style="height: 50px;">需要转换的 JSON</div>
+      <textarea
+        ref="input"
+        style="display: inline-block; width: 500px; height: 500px;"
+        v-model="json"
+      ></textarea>
+      <div>
+        <button @click="onConvert">转换</button>
+        <div>
+          缩进类型：
+          <input name="indent_type" value="space" type="radio" v-model="indentType"> 全角空格
+          <input name="indent_type" value="table" type="radio" v-model="indentType"> 制表符
+          <input name="indent_type" value="dash" type="radio" v-model="indentType"> 短横线
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="width: 500px; height: 50px;">转换的结果。或者旧版本的 markdown 数据，用来提供字段【说明】。需要一致的嵌套层级和缩进类型</div>
+      <textarea
+        ref="output"
+        style="display: inline-block; width: 500px; height: 500px;"
+        v-model="tableMD"
+        placeholder="填入旧版本 markdown 表格，可自动为新版填充【说明】"
+      ></textarea>
+    </div>
+    <div>
+      <div style="height: 50px;">表格预览</div>
+      <div
+        v-html="compiledMarkdown"
+        style="display: inline-block; box-sizing: border-box; padding: 5px; width: 500px;"
+      ></div>
     </div>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
-<script src="https://unpkg.com/marked@0.3.6"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@0.3.6/marked.min.js"></script>
 <script>
 const sepChar = '.'
 const log = console.log
@@ -144,7 +157,21 @@ const vm = new Vue({
       haha: 1,
     },
     json: '',
-    tableMD: '',
+    tableMD: `|参数|类型|描述|
+|:-|:-|:-|
+|array|array|数组类型啊|
+|code|string|0：成功，其他：失败|
+|msg|string|提示消息|
+|data|object|数据|
+|└list|array|列表|
+|　└c_type|int|类型：0 - 普通，1 - 牛逼|
+|　└parsed_media|object|媒体数据|
+|　　└images|array|图片列表|
+|　　└videos|array|视频列表|
+|　　　└video|string|视频链接|
+|└totalCount|object|统计数据|
+|　└onCount|int|进行中数量|
+|　└endCount|int|已结束数量|`,
     indentType: localStorage.getItem(INDENT_TYPE_KEY) || 'space',
   }),
   computed: {
@@ -170,13 +197,14 @@ const vm = new Vue({
 
       const flatten = this.flatten(data)
       const grouped = this.group(flatten)
+      const remarks = this.parseRemarks(this.tableMD)
 
-      this.tableMD = '|参数|类型|描述|\n|:-|:-|:-|\n' + this.makeTableBody(grouped)
+      this.tableMD = '|参数|类型|描述|\n|:-|:-|:-|\n' + this.makeTableBody(grouped, remarks)
 
       this.$nextTick(() => {
         this.$refs.output.select()
         document.execCommand('copy')
-        alert('已复制')
+        alert('结果已复制')
       })
     },
     makeIndent(level) {
@@ -190,7 +218,7 @@ const vm = new Vue({
           return level ? '　'.repeat(level - 1) + '└' : ''
       }
     },
-    makeTableBody(data) {
+    makeTableBody(data, remarks) {
       const keys = Object.keys(data)
 
       let md = ''
@@ -213,7 +241,9 @@ const vm = new Vue({
         if (keyPieces.length > 1) {
           prefix += keyPieces[0] + sepChar
         } else {
-          md += `|${this.makeIndent(key.split(sepChar).length - 1)}${keyPieces[0]}|${valType}|无|\n`
+          const arg = this.makeIndent(key.split(sepChar).length - 1) + keyPieces[0]
+          const remark = remarks[arg] || '无'
+          md += `|${arg}|${valType}|${remark}|\n`
           index++
         }
       }
@@ -293,6 +323,18 @@ const vm = new Vue({
       walk(0)
 
       return grouped
+    },
+    parseRemarks(md) {
+      const remarks = {}
+      md
+        .split('\n')
+        .slice(2)
+        .forEach(line => {
+          const p = line.split('|').slice(1, -1)
+          remarks[p[0]] = p[2]
+        })
+
+      return remarks
     },
   },
   watch: {
