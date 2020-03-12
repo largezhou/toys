@@ -87,7 +87,6 @@ const vm = new Vue({
                   {
                     b: 3,
                     c: 1,
-                    d: null,
                   },
                 ],
                 b: 1,
@@ -115,11 +114,9 @@ const vm = new Vue({
                 a: [
                   {
                     b: 3,
-                    c: null,
                     d: 1,
                   },
                   {
-                    b: null,
                     c: 2,
                     d: 2,
                   },
@@ -172,9 +169,9 @@ const vm = new Vue({
       }
 
       const flatten = this.flatten(data)
-      log(window.t = flatten)
+      const grouped = this.group(flatten)
 
-      this.tableMD = '|参数|类型|描述|\n|:-|:-|:-|\n' + this.makeTableBody(flatten)
+      this.tableMD = '|参数|类型|描述|\n|:-|:-|:-|\n' + this.makeTableBody(grouped)
     },
     makeIndent(level) {
       switch (this.indentType) {
@@ -268,6 +265,28 @@ const vm = new Vue({
           tar[key] = source[key]
         }
       })
+    },
+    group(data) {
+      const keys = Object.keys(data)
+      const grouped = {}
+
+      const walk = (index, prefix = '') => {
+        if (index >= keys.length) {
+          return
+        }
+
+        const key = keys[index]
+
+        if (!prefix || key.startsWith(prefix + sepChar)) {
+          grouped[key] = data[key]
+          walk(index + 1, key)
+        }
+        walk(index + 1, prefix)
+      }
+
+      walk(0)
+
+      return grouped
     },
   },
   watch: {
