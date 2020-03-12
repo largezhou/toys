@@ -30,8 +30,8 @@
 <body>
 <div id="app">
   <div style="display: flex; justify-items: center;">
-    <textarea id="input" style="display: inline-block;" cols="50" rows="30" v-model="json"></textarea>
-    <textarea style="display: inline-block;" cols="50" rows="30" v-model="tableMD"></textarea>
+    <textarea ref="input" style="display: inline-block;" cols="50" rows="30" v-model="json"></textarea>
+    <textarea ref="output" style="display: inline-block;" cols="50" rows="30" v-model="tableMD"></textarea>
     <div
       v-html="compiledMarkdown"
       style="
@@ -156,7 +156,7 @@ const vm = new Vue({
     this.json = JSON.stringify(this.obj, null, 2)
   },
   mounted() {
-    document.querySelector('#input').select()
+    this.$refs.input.select()
   },
   methods: {
     onConvert() {
@@ -172,6 +172,12 @@ const vm = new Vue({
       const grouped = this.group(flatten)
 
       this.tableMD = '|参数|类型|描述|\n|:-|:-|:-|\n' + this.makeTableBody(grouped)
+
+      this.$nextTick(() => {
+        this.$refs.output.select()
+        document.execCommand('copy')
+        alert('已复制')
+      })
     },
     makeIndent(level) {
       switch (this.indentType) {
