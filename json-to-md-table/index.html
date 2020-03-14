@@ -157,21 +157,7 @@ const vm = new Vue({
       haha: 1,
     },
     json: '',
-    tableMD: `|参数|类型|描述|
-|:-|:-|:-|
-|array|array|数组类型啊|
-|code|string|0：成功，其他：失败|
-|msg|string|提示消息|
-|data|object|数据|
-|└list|array|列表|
-|　└c_type|int|类型：0 - 普通，1 - 牛逼|
-|　└parsed_media|object|媒体数据|
-|　　└images|array|图片列表|
-|　　└videos|array|视频列表|
-|　　　└video|string|视频链接|
-|└totalCount|object|统计数据|
-|　└onCount|int|进行中数量|
-|　└endCount|int|已结束数量|`,
+    tableMD: '',
     indentType: localStorage.getItem(INDENT_TYPE_KEY) || 'space',
   }),
   computed: {
