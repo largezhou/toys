@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -39,6 +40,9 @@
       ></textarea>
       <div>
         <button @click="onConvert">转换</button>
+        <label>
+          <input type="checkbox" v-model="hasNeedCol"> 必填列
+        </label>
         <div>
           缩进类型：
           <input name="indent_type" value="space" type="radio" v-model="indentType"> 全角空格
@@ -159,6 +163,7 @@ const vm = new Vue({
     json: '',
     tableMD: '',
     indentType: localStorage.getItem(INDENT_TYPE_KEY) || 'space',
+    hasNeedCol: true,
   }),
   computed: {
     compiledMarkdown() {
@@ -185,7 +190,7 @@ const vm = new Vue({
       const grouped = this.group(flatten)
       const remarks = this.parseRemarks(this.tableMD)
 
-      this.tableMD = '|参数|类型|描述|\n|:-|:-|:-|\n' + this.makeTableBody(grouped, remarks)
+      this.tableMD = `|参数|类型|${this.hasNeedCol ? '必填|' : ''}描述|\n|:-|:-|:-|:-|\n` + this.makeTableBody(grouped, remarks)
 
       this.$nextTick(() => {
         this.$refs.output.select()
@@ -229,7 +234,7 @@ const vm = new Vue({
         } else {
           const arg = this.makeIndent(key.split(sepChar).length - 1) + keyPieces[0]
           const remark = remarks[arg] || '无'
-          md += `|${arg}|${valType}|${remark}|\n`
+          md += `|${arg}|${valType}|${this.hasNeedCol ? '是|' : ''}${remark}|\n`
           index++
         }
       }
@@ -317,7 +322,7 @@ const vm = new Vue({
         .slice(2)
         .forEach(line => {
           const p = line.split('|').slice(1, -1)
-          remarks[p[0]] = p[2]
+          remarks[p[0]] = p[p.length - 1]
         })
 
       return remarks
